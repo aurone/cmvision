@@ -49,6 +49,7 @@ CMVisionColorBlobFinder::~CMVisionColorBlobFinder()
 
 bool CMVisionColorBlobFinder::initialize(ros::NodeHandle &node_handle)
 {
+    ros::NodeHandle ph("~");
 
 	uyvy_image_ = NULL;
 	width_ = 0;
@@ -60,30 +61,30 @@ bool CMVisionColorBlobFinder::initialize(ros::NodeHandle &node_handle)
 	blob_message_.blob_count = 0;
 
 	// Get the color file. This defines what colors to track
-	if (!node_handle.getParam("/cmvision/color_file", color_filename_))
+	if (!ph.getParam("color_file", color_filename_))
 	{
-		ROS_ERROR("Could not find color calibration file name \"/cmvision/color_file\" in namespace: %s.", node_handle.getNamespace().c_str());
+		ROS_ERROR("Could not find color calibration file name \"/cmvision/color_file\" in namespace: %s.", ph.getNamespace().c_str());
 		return false;
 	}
 
 	// Get the level of debug output
-	node_handle.param("/cmvision/debug_on", debug_on_, false);
+	ph.param("debug_on", debug_on_, false);
 
 	// check whether mean shift is turned on
-	if (!node_handle.getParam("/cmvision/mean_shift_on", mean_shift_on_))
+	if (!ph.getParam("mean_shift_on", mean_shift_on_))
 	{
-		ROS_ERROR("Could not find mean shift flag \"/cmvision/mean_shift_on\" in namespace: %s.", node_handle.getNamespace().c_str());
+		ROS_ERROR("Could not find mean shift flag \"/cmvision/mean_shift_on\" in namespace: %s.", ph.getNamespace().c_str());
 		return false;
 	}
 	else
 	{
-		if (!node_handle.getParam("/cmvision/spatial_radius_pix", spatial_radius_))
+		if (!ph.getParam("spatial_radius_pix", spatial_radius_))
 		{
 			ROS_ERROR("Could not get spatial_radius_pix from param server \"/cmvision/spatial_radius_pix\" in namespace: %s.", node_handle.getNamespace().c_str());
 			return false;
 		}
 
-		if (!node_handle.getParam("/cmvision/color_radius_pix", color_radius_))
+		if (!ph.getParam("color_radius_pix", color_radius_))
 		{
 			ROS_ERROR("Could not get color_radius_pix from param server \"/cmvision/color_radius_pix\" in namespace: %s.", node_handle.getNamespace().c_str());
 			return false;
@@ -121,7 +122,7 @@ void CMVisionColorBlobFinder::imageCB(const sensor_msgs::ImageConstPtr& msg)
         cv_bridge::CvImagePtr image = cv_bridge::toCvCopy(msg);
         cvImageRef = IplImage(image->image);
         cvImage = &cvImageRef;
-        
+
 	size = cvGetSize(cvImage);
 
 	// this shouldn't change often
